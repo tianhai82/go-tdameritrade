@@ -104,7 +104,8 @@ func (a *Authenticator) FinishOAuth2Flow(ctx context.Context, w http.ResponseWri
 	if state[0] != expectedState {
 		return nil, fmt.Errorf("invalid state. expected: '%v', got '%v'", expectedState, state[0])
 	}
-	token, err := a.OAuth2.Exchange(ctx, code[0])
+
+	token, err := a.OAuth2.Exchange(ctx, code[0], oauth2.AccessTypeOffline)
 	if err != nil {
 		return nil, err
 	}
