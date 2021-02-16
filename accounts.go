@@ -184,11 +184,19 @@ type CancelTime struct {
 
 type Orders []*Order
 
+//Per TD TDAmeritrade documentation, CancelTime should be a struct...
+// cancelTime": {
+//     "date": "string",
+//     "shortFormat": false
+//   }
+
+//However, the actual response is simply a string: YYYY-MM-DD
+//This will only apply to orders that are a limit order where the expiry is set.
 type Order struct {
 	Session                  string                `json:"session"`
 	Duration                 string                `json:"duration"`
 	OrderType                string                `json:"orderType"`
-	CancelTime               *CancelTime           `json:"cancelTime,omitempty"`
+	CancelTime               string                `json:"cancelTime,omitempty"`
 	ComplexOrderStrategyType string                `json:"complexOrderStrategyType,omitempty"`
 	Quantity                 float64               `json:"quantity,omitempty"`
 	FilledQuantity           float64               `json:"filledQuantity,omitempty"`

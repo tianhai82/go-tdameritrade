@@ -3,17 +3,18 @@ package tdameritrade
 import (
 	"context"
 	"fmt"
-	"github.com/google/go-querystring/query"
 	"time"
+
+	"github.com/google/go-querystring/query"
 )
 
 var (
-	validPeriodTypes = []string{"day", "month", "year", "ytd"}
+	validPeriodTypes    = []string{"day", "month", "year", "ytd"}
 	validFrequencyTypes = []string{"minute", "daily", "weekly", "monthly"}
 )
 
 const (
-	defaultPeriodType = "day"
+	defaultPeriodType    = "day"
 	defaultFrequencyType = "minute"
 )
 
@@ -26,20 +27,24 @@ type PriceHistoryService struct {
 }
 
 // PriceHistoryOptions is parsed and translated to query options in the https request
+//cannot use time.Time in StartDate and EndDate. Date must be Epoch time.
+//Use new function ConvertToEpoch() which returns and int64.
+//This is per the documentation from TD AMERITRADE.
+//also, omitempty must be set because if you set a start and end date, you cannot send the "period" value or it will error.
 type PriceHistoryOptions struct {
-	PeriodType            string    `url:"periodType"`
-	Period                int       `url:"period"`
-	FrequencyType         string    `url:"frequencyType"`
-	Frequency             int       `url:"frequency"`
-	EndDate               time.Time `url:"endDate"`
-	StartDate             time.Time `url:"startDate"`
-	NeedExtendedHoursData *bool      `url:"needExtendedHoursData"`
+	PeriodType            string `url:"periodType,omitempty"`
+	Period                int    `url:"period,omitempty"`
+	FrequencyType         string `url:"frequencyType,omitempty"`
+	Frequency             int    `url:"frequency,omitempty"`
+	EndDate               int64  `url:"endDate,omitempty"`
+	StartDate             int64  `url:"startDate,omitempty"`
+	NeedExtendedHoursData *bool  `url:"needExtendedHoursData"`
 }
 
 type PriceHistory struct {
 	Candles []struct {
 		Close    float64 `json:"close"`
-		Datetime int `json:"datetime"`
+		Datetime int     `json:"datetime"`
 		High     float64 `json:"high"`
 		Low      float64 `json:"low"`
 		Open     float64 `json:"open"`
@@ -68,6 +73,8 @@ func (s *PriceHistoryService) PriceHistory(ctx context.Context, symbol string, o
 	if err != nil {
 		return nil, nil, err
 	}
+
+	fmt.Println(PrintRequest(req))
 
 	priceHistory := new(PriceHistory)
 	resp, err := s.client.Do(ctx, req, priceHistory)
@@ -109,3 +116,8 @@ func contains(s string, lst []string) bool {
 	return false
 }
 
+func ConvertToEpoch(t time.Time) int64 {
+
+	return t.Round(time.Millisecond).UnixNano() / 1e6
+
+}
