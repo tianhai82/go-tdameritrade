@@ -28,7 +28,7 @@ type PriceHistoryService struct {
 
 // PriceHistoryOptions is parsed and translated to query options in the https request
 //cannot use time.Time in StartDate and EndDate. Date must be Epoch time.
-//Use new function ConvertToEpoch() which returns and int64.
+//Use new function ConvertToEpoch() which returns an int64.
 //This is per the documentation from TD AMERITRADE.
 //also, omitempty must be set because if you set a start and end date, you cannot send the "period" value or it will error.
 type PriceHistoryOptions struct {
@@ -73,8 +73,6 @@ func (s *PriceHistoryService) PriceHistory(ctx context.Context, symbol string, o
 	if err != nil {
 		return nil, nil, err
 	}
-
-	fmt.Println(PrintRequest(req))
 
 	priceHistory := new(PriceHistory)
 	resp, err := s.client.Do(ctx, req, priceHistory)
