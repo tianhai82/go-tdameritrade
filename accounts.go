@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
+	"net/http"
+	"strings"
+
+	"github.com/google/go-querystring/query"
 )
 
 type Accounts []*Account
@@ -170,7 +173,7 @@ type OrderLegCollection struct {
 	Instrument     Instrument `json:"instrument"`
 	Instruction    string     `json:"instruction"`
 	PositionEffect string     `json:"positionEffect,omitempty"`
-	Quantity       int        `json:"quantity"`
+	Quantity       float64    `json:"quantity"`
 	QuantityType   string     `json:"quantityType,omitempty"`
 }
 
@@ -179,11 +182,21 @@ type CancelTime struct {
 	ShortFormat bool   `json:"shortFormat,omitempty"`
 }
 
+type Orders []*Order
+
+//Per TD TDAmeritrade documentation, CancelTime should be a struct...
+// cancelTime": {
+//     "date": "string",
+//     "shortFormat": false
+//   }
+
+//However, the actual response is simply a string: YYYY-MM-DD
+//This will only apply to orders that are a limit order where the expiry is set.
 type Order struct {
 	Session                  string                `json:"session"`
 	Duration                 string                `json:"duration"`
 	OrderType                string                `json:"orderType"`
-	CancelTime               *CancelTime           `json:"cancelTime,omitempty"`
+	CancelTime               string                `json:"cancelTime,omitempty"`
 	ComplexOrderStrategyType string                `json:"complexOrderStrategyType,omitempty"`
 	Quantity                 float64               `json:"quantity,omitempty"`
 	FilledQuantity           float64               `json:"filledQuantity,omitempty"`
@@ -248,10 +261,11 @@ type AccountOptions struct {
 }
 
 type OrderParams struct {
-	MaxResults int
-	From       time.Time
-	To         time.Time
-	Status     string
+	AccountId  string `url:"accountId"`
+	MaxResults int    `url:"maxResults,omitempty"`
+	From       string `url:"fromEnteredTime,omitempty"`
+	To         string `url:"toEnteredTime,omitempty"`
+	Status     string `url:"status,omitempty"`
 }
 
 func (i *Instrument) UnmarshalJSON(bs []byte) (err error) {
@@ -431,13 +445,28 @@ func (s *AccountsService) GetOrderByPath(ctx context.Context, accountID string, 
 	return s.client.Do(ctx, req, nil)
 }
 
-func (s *AccountsService) GetOrderByQuery(ctx context.Context, accountID string, orderParams *OrderParams) (*Response, error) {
-	u := fmt.Sprintf("accounts/%s/orders", accountID)
+func (s *AccountsService) GetOrdersByQuery(ctx context.Context, orderParams *OrderParams) (*Orders, *Response, error) {
+	u := fmt.Sprintf("orders")
+	if orderParams != nil {
+		q, err := query.Values(orderParams)
+		if err != nil {
+			return nil, nil, err
+		}
+		u = fmt.Sprintf("%s?%s", u, q.Encode())
+	}
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return s.client.Do(ctx, req, nil)
+
+	ords := new(Orders)
+	resp, err := s.client.Do(ctx, req, ords)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return ords, resp, nil
+
 }
 
 func (s *AccountsService) CreateSavedOrder(ctx context.Context, accountID string, order *Order) (*Response, error) {
@@ -484,4 +513,31 @@ func (s *AccountsService) ReplaceSavedOrder(ctx context.Context, accountID, save
 	}
 	req.Header.Set("Content-Type", "application/json")
 	return s.client.Do(ctx, req, nil)
+}
+
+//Utility for printing out requests for debugging.
+func PrintRequest(r *http.Request) string {
+	// Create return string
+	var request []string
+	// Add the request string
+	url := fmt.Sprintf("%v %v %v", r.Method, r.URL, r.Proto)
+	request = append(request, url)
+	// Add the host
+	request = append(request, fmt.Sprintf("Host: %v", r.Host))
+	// Loop through headers
+	for name, headers := range r.Header {
+		name = strings.ToLower(name)
+		for _, h := range headers {
+			request = append(request, fmt.Sprintf("%v: %v", name, h))
+		}
+	}
+
+	// If this is a POST, add post data
+	if r.Method == "POST" {
+		r.ParseForm()
+		request = append(request, "\n")
+		request = append(request, r.Form.Encode())
+	}
+	// Return the request as a string
+	return strings.Join(request, "\n")
 }
