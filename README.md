@@ -1,5 +1,5 @@
 # go-tdameritrade
-go client for the tdameritrade api
+go client for the tdameritrade api, forked from [Zachray Rice's library](https://github.com/zricethezav/go-tdameritrade)
 
 [![Documentation](https://godoc.org/github.com/JonCooperWorks/go-tdameritrade?status.svg)](https://godoc.org/github.com/JonCooperWorks/go-tdameritrade)
 
