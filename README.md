@@ -9,7 +9,6 @@ go client for the tdameritrade api, forked from [Zachray Rice's library](https:/
 go-tdameritrade handles all interaction with the [TD Ameritrade REST API](https://developer.tdameritrade.com/apis).
 See the TD Ameritrade [developer site](https://developer.tdameritrade.com/) to learn how their APIs work.
 This is a very thin wrapper and does not perform any validation.
-go-tdameritrade doesn't support streaming yet.
 
 
 ## Authentication with TD Ameritrade
@@ -74,6 +73,13 @@ type Client struct {
 ```
 
 You get a ```tdameritrade.Client``` from the ```FinishOAuth2``` or ```AuthenticatedClient``` method on the ```tdameritrade.Authenticator``` struct.
+
+## Streaming
+TD Ameritrade provides a [websockets API](https://developer.tdameritrade.com/content/streaming-data) that allows for streaming data.
+`go-tdameritrade` provides some [helpers](streaming.go) for authenticating with TD Ameritrade's socket API.
+Streaming support is very basic.
+`go-tdameritrade` can only send and receive `[]byte` payloads to and from a TD Ameritrade websocket with the `tdameritrade.StreamingClient`.
+You can find an example [here](examples/streaming/streaming.go).
 
 
 ## Examples
