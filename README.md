@@ -123,7 +123,7 @@ streamingClient.SendCommand(tdameritrade.Command{
 ```
 
 Streaming support is very basic.
-`go-tdameritrade` can only receive `[]byte` payloads to and from a TD Ameritrade websocket with the [`ReceiveText`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#StreamingClient.ReceiveText) method.
+`go-tdameritrade` can only receive `[]byte` payloads from a TD Ameritrade websocket with the [`ReceiveText`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#StreamingClient.ReceiveText) method.
 You can find an example [here](examples/streaming/streaming.go).
 
 
