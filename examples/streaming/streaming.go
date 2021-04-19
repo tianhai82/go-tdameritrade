@@ -127,6 +127,7 @@ func (h *TDHandlers) Callback(w http.ResponseWriter, req *http.Request) {
 
 			case err := <-errors:
 				log.Printf("error: %v", err)
+				return
 			default:
 				continue
 			}
