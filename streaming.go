@@ -66,6 +66,7 @@ func (s *StreamingClient) Close() error {
 
 // SendText sends a byte payload to TD Ameritrade's websocket.
 // TD Ameritrade commands are JSON encoded payloads.
+// You should generally be using SendCommand to send commands to TD Ameritrade.
 func (s *StreamingClient) SendText(payload []byte) error {
 	return s.connection.WriteMessage(websocket.TextMessage, payload)
 }
@@ -76,6 +77,17 @@ func (s *StreamingClient) SendText(payload []byte) error {
 // All errors will be from Gorilla's websocket library and implement the net.Error interface.
 func (s *StreamingClient) ReceiveText() (<-chan []byte, <-chan error) {
 	return s.messages, s.errors
+}
+
+// SendCommand serializes and sends a Command struct to TD Ameritrade.
+// It is a wrapper around SendText.
+func (s *StreamingClient) SendCommand(command Command) error {
+	commandBytes, err := json.Marshal(command)
+	if err != nil {
+		return err
+	}
+
+	return s.SendText(commandBytes)
 }
 
 // AuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
