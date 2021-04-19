@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -55,6 +56,7 @@ type StreamingClient struct {
 	connection *websocket.Conn
 	messages   chan []byte
 	errors     chan error
+	mu         sync.Mutex
 }
 
 // Close closes the underlying websocket connection.
@@ -68,6 +70,8 @@ func (s *StreamingClient) Close() error {
 // TD Ameritrade commands are JSON encoded payloads.
 // You should generally be using SendCommand to send commands to TD Ameritrade.
 func (s *StreamingClient) SendText(payload []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return s.connection.WriteMessage(websocket.TextMessage, payload)
 }
 

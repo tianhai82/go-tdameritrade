@@ -112,8 +112,8 @@ func (h *TDHandlers) Callback(w http.ResponseWriter, req *http.Request) {
 	}
 	log.Printf("User Principals: [Status: %d] %+v", resp.StatusCode, *userPrincipals)
 
+	streamingClient, err := tdameritrade.AuthenticatedStreamingClient(ctx, c, userPrincipals.Accounts[0].AccountID)
 	go func() {
-		streamingClient, err := tdameritrade.AuthenticatedStreamingClient(ctx, c, userPrincipals.Accounts[0].AccountID)
 		if err != nil {
 			log.Fatal(err)
 		}
