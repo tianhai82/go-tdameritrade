@@ -76,10 +76,56 @@ You get a ```tdameritrade.Client``` from the ```FinishOAuth2``` or ```Authentica
 
 ## Streaming
 TD Ameritrade provides a [websockets API](https://developer.tdameritrade.com/content/streaming-data) that allows for streaming data.
-`go-tdameritrade` provides some [helpers](streaming.go) for authenticating with TD Ameritrade's socket API.
+`go-tdameritrade` provides a [streaming client](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#StreamingClient) for authenticating with TD Ameritrade's socket API.
+To create an instance of the `tdameritrade.StreamingClient`, use the [`tdameritrade.AuthenticatedStreamingClient`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#AuthenticatedStreamingClient).
+
+TD's Streaming API accepts commands in a format described in their [documentation](https://developer.tdameritrade.com/content/streaming-data#_Toc504640563).
+`go-tdameritrade` provides struct wrappers over the command types.
+
+```
+type Command struct {
+	Requests []StreamRequest `json:"requests"`
+}
+
+type StreamRequest struct {
+	Service    string       `json:"service"`
+	Requestid  string       `json:"requestid"`
+	Command    string       `json:"command"`
+	Account    string       `json:"account"`
+	Source     string       `json:"source"`
+	Parameters StreamParams `json:"parameters"`
+}
+
+type StreamParams struct {
+	Keys   string `json:"keys"`
+	Fields string `json:"fields"`
+}
+```
+
+[`Command`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#Command)s can be sent to TD Ameritrade with the [`SendCommand`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#StreamingClient.SendCommand) convenience method.
+
+```
+streamingClient.SendCommand(tdameritrade.Command{
+	Requests: []tdameritrade.StreamRequest{
+		{
+			Service:   "QUOTE",
+			Requestid: "2",
+			Command:   "SUBS",
+			Account:   userPrincipals.Accounts[0].AccountID,
+			Source:    userPrincipals.StreamerInfo.AppID,
+			Parameters: tdameritrade.StreamParams{
+				Keys:   "AAPL",
+				Fields: "0,1,2,3,4,5,6,7,8",
+			},
+		},
+	},
+})
+```
+
 Streaming support is very basic.
-`go-tdameritrade` can only send and receive `[]byte` payloads to and from a TD Ameritrade websocket with the `tdameritrade.StreamingClient`.
+`go-tdameritrade` can only receive `[]byte` payloads to and from a TD Ameritrade websocket with the [`ReceiveText`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#StreamingClient.ReceiveText) method.
 You can find an example [here](examples/streaming/streaming.go).
+
 
 
 ## Examples

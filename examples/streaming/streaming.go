@@ -100,20 +100,20 @@ func (h *TDHandlers) Authenticate(w http.ResponseWriter, req *http.Request) {
 
 func (h *TDHandlers) Callback(w http.ResponseWriter, req *http.Request) {
 	ctx := context.Background()
-	c, err := h.authenticator.FinishOAuth2Flow(ctx, w, req)
+	client, err := h.authenticator.FinishOAuth2Flow(ctx, w, req)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	userPrincipals, resp, err := c.User.GetUserPrincipals(ctx, "streamerSubscriptionKeys", "streamerConnectionInfo")
+	userPrincipals, resp, err := client.User.GetUserPrincipals(ctx, "streamerSubscriptionKeys", "streamerConnectionInfo")
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("User Principals: [Status: %d] %+v", resp.StatusCode, *userPrincipals)
 
-	streamingClient, err := tdameritrade.AuthenticatedStreamingClient(ctx, c, userPrincipals.Accounts[0].AccountID)
+	streamingClient, err := tdameritrade.AuthenticatedStreamingClient(ctx, client, userPrincipals.Accounts[0].AccountID)
 	go func() {
 		if err != nil {
 			log.Fatal(err)
