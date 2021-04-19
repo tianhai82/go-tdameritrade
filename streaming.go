@@ -71,15 +71,12 @@ func (s *StreamingClient) SendText(payload []byte) error {
 	return s.connection.WriteMessage(websocket.TextMessage, payload)
 }
 
-// ReceiveText returns a read-only channel with the raw byte responses from TD Ameritrade.
-func (s *StreamingClient) ReceiveText() <-chan []byte {
-	return s.messages
-}
-
-// ReceiveErrors returns a read-only channel with errors returned when receiving messages.
-// Use this for error handling.
-func (s *StreamingClient) ReceiveErrors() <-chan error {
-	return s.errors
+// ReceiveText returns read-only channels with the raw byte responses from TD Ameritrade and errors generated while streaming.
+// Callers should select over both of these channels to avoid blocking one.
+// Callers are able to handle errors how thes see fit.
+// All errors will be from Gorilla's websocket library and implement the net.Error interface.
+func (s *StreamingClient) ReceiveText() (<-chan []byte, <-chan error) {
+	return s.messages, s.errors
 }
 
 // AuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
