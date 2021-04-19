@@ -117,9 +117,16 @@ func (h *TDHandlers) Callback(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer streamingClient.Close()
-		for message := range streamingClient.ReceiveText() {
-			log.Printf("message: %s", string(message))
+		for {
+			select {
+			case message := <-streamingClient.ReceiveText():
+				log.Printf("message: %s", message)
+
+			case err := <-streamingClient.ReceiveErrors():
+				log.Printf("error: %v", err)
+			default:
+				continue
+			}
 		}
 	}()
 
