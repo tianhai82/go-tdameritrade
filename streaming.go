@@ -52,7 +52,6 @@ type StreamAuthParams struct {
 // StreamingClient provides real time updates from TD Ameritrade's streaming API.
 // See https://developer.tdameritrade.com/content/streaming-data for more information.
 type StreamingClient struct {
-	client     *Client
 	connection *websocket.Conn
 	messages   chan []byte
 	errors     chan error
@@ -106,7 +105,6 @@ func AuthenticatedStreamingClient(ctx context.Context, client *Client, accountID
 	}
 
 	streamingClient := &StreamingClient{
-		client:     client,
 		connection: conn,
 		messages:   make(chan []byte),
 		errors:     make(chan error),
