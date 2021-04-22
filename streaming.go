@@ -3,9 +3,7 @@ package tdameritrade
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"sync"
 	"time"
@@ -95,23 +93,10 @@ func (s *StreamingClient) SendCommand(command Command) error {
 }
 
 // AuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
-func AuthenticatedStreamingClient(ctx context.Context, client *Client, accountID string) (*StreamingClient, error) {
-	userPrincipals, resp, err := client.User.GetUserPrincipals(ctx, "streamerSubscriptionKeys", "streamerConnectionInfo")
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New(string(body))
-	}
-
+func AuthenticatedStreamingClient(ctx context.Context, userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
 	streamURL := url.URL{
 		Scheme: "wss",
-		Host:   userPrincipals.StreamerInfo.StreamerSocketURL,
+		Host:   userPrincipal.StreamerInfo.StreamerSocketURL,
 		Path:   "/ws",
 	}
 
@@ -141,27 +126,27 @@ func AuthenticatedStreamingClient(ctx context.Context, client *Client, accountID
 
 	// Authenticate with TD's websocket.
 	// findAccount ensures that a user has passed us an account they control to avoid wasting TD Ameritrade's time.
-	account, err := findAccount(userPrincipals, accountID)
+	account, err := findAccount(userPrincipal, accountID)
 	if err != nil {
 		return nil, err
 	}
 
-	timestamp, err := time.Parse("2006-01-02T15:04:05-0700", userPrincipals.StreamerInfo.TokenTimestamp)
+	timestamp, err := time.Parse("2006-01-02T15:04:05-0700", userPrincipal.StreamerInfo.TokenTimestamp)
 	if err != nil {
 		return nil, err
 	}
 	credentials := url.Values{}
 	credentials.Add("userid", account.AccountID)
-	credentials.Add("token", userPrincipals.StreamerInfo.Token)
+	credentials.Add("token", userPrincipal.StreamerInfo.Token)
 	credentials.Add("company", account.Company)
 	credentials.Add("segment", account.Segment)
 	credentials.Add("cddomain", account.AccountCdDomainID)
-	credentials.Add("usergroup", userPrincipals.StreamerInfo.UserGroup)
-	credentials.Add("accesslevel", userPrincipals.StreamerInfo.AccessLevel)
+	credentials.Add("usergroup", userPrincipal.StreamerInfo.UserGroup)
+	credentials.Add("accesslevel", userPrincipal.StreamerInfo.AccessLevel)
 	credentials.Add("authorized", "Y")
 	credentials.Add("timestamp", fmt.Sprintf("%d", timestamp.UnixNano()/int64(time.Millisecond)))
-	credentials.Add("appid", userPrincipals.StreamerInfo.AppID)
-	credentials.Add("acl", userPrincipals.StreamerInfo.ACL)
+	credentials.Add("appid", userPrincipal.StreamerInfo.AppID)
+	credentials.Add("acl", userPrincipal.StreamerInfo.ACL)
 
 	// TD Ameritrade expects this JSON command from clients.
 	authCmd := StreamAuthCommand{
@@ -171,10 +156,10 @@ func AuthenticatedStreamingClient(ctx context.Context, client *Client, accountID
 				Command:   "LOGIN",
 				Requestid: 0,
 				Account:   account.AccountID,
-				Source:    userPrincipals.StreamerInfo.AppID,
+				Source:    userPrincipal.StreamerInfo.AppID,
 				Parameters: StreamAuthParams{
 					Credential: credentials.Encode(),
-					Token:      userPrincipals.StreamerInfo.Token,
+					Token:      userPrincipal.StreamerInfo.Token,
 					Version:    "1.0",
 				},
 			},
