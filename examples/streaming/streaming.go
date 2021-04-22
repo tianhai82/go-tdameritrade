@@ -100,13 +100,24 @@ func (h *TDHandlers) Authenticate(w http.ResponseWriter, req *http.Request) {
 
 func (h *TDHandlers) Callback(w http.ResponseWriter, req *http.Request) {
 	ctx := context.Background()
-	client, err := h.authenticator.FinishOAuth2Flow(ctx, w, req)
+	_, err := h.authenticator.FinishOAuth2Flow(ctx, w, req)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	http.Redirect(w, req, "/stream", http.StatusFound)
+}
+
+func (h *TDHandlers) Stream(w http.ResponseWriter, req *http.Request) {
+	ctx := context.Background()
+	client, err := h.authenticator.AuthenticatedClient(ctx, req)
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	userPrincipals, resp, err := client.User.GetUserPrincipals(ctx, "streamerSubscriptionKeys", "streamerConnectionInfo")
 	if err != nil {
 		log.Fatal(err)
@@ -173,5 +184,6 @@ func main() {
 	handlers := &TDHandlers{authenticator: authenticator}
 	http.HandleFunc("/authenticate", handlers.Authenticate)
 	http.HandleFunc("/callback", handlers.Callback)
+	http.HandleFunc("/stream", handlers.Stream)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
