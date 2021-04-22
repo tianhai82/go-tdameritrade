@@ -110,8 +110,8 @@ func (s *StreamingClient) SendCommand(command Command) error {
 	return s.SendText(commandBytes)
 }
 
-// AuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
-func AuthenticatedStreamingClient(ctx context.Context, userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
+// NewAuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
+func NewAuthenticatedStreamingClient(ctx context.Context, userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
 	streamURL := url.URL{
 		Scheme: "wss",
 		Host:   userPrincipal.StreamerInfo.StreamerSocketURL,
