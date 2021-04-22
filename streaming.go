@@ -3,6 +3,7 @@ package tdameritrade
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"sync"
@@ -40,6 +41,23 @@ type StreamAuthRequest struct {
 	Account    string           `json:"account"`
 	Source     string           `json:"source"`
 	Parameters StreamAuthParams `json:"parameters"`
+}
+
+type StreamAuthResponse struct {
+	Response []StreamAuthResponseBody `json:"response"`
+}
+
+type StreamAuthResponseBody struct {
+	Service   string                    `json:"service"`
+	Requestid string                    `json:"requestid"`
+	Command   string                    `json:"command"`
+	Timestamp int64                     `json:"timestamp"`
+	Content   StreamAuthResponseContent `json:"content"`
+}
+
+type StreamAuthResponseContent struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
 }
 
 type StreamAuthParams struct {
@@ -176,7 +194,24 @@ func AuthenticatedStreamingClient(ctx context.Context, userPrincipal *UserPrinci
 		return nil, err
 	}
 
-	return streamingClient, nil
+	select {
+	case message := <-streamingClient.messages:
+		var authResponse StreamAuthResponse
+		err = json.Unmarshal(message, &authResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		if authResponse.Response[0].Content.Code != 0 {
+			return nil, errors.New(authResponse.Response[0].Content.Msg)
+		}
+
+		return streamingClient, nil
+
+	case err := <-streamingClient.errors:
+		return nil, err
+	}
+
 }
 
 func findAccount(userPrincipal *UserPrincipal, accountID string) (*UserAccountInfo, error) {

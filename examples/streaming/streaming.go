@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/joncooperworks/go-tdameritrade"
 	"golang.org/x/oauth2"
@@ -145,8 +144,6 @@ func (h *TDHandlers) Stream(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	// Wait until auth completes.
-	time.Sleep(2 * time.Second)
 	streamingClient.SendCommand(tdameritrade.Command{
 		Requests: []tdameritrade.StreamRequest{
 			{
