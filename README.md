@@ -12,10 +12,10 @@ This is a very thin wrapper and does not perform any validation.
 
 
 ## Authentication with TD Ameritrade
-There is an example of using OAuth2 to authenticate a user and use the services on the TD Ameritrade API in [examples/webauth/webauth.go](https://github.com/JonCooperWorks/go-tdameritrade/blob/master/examples/webauth/webauth.go).
+There is an example of using OAuth2 to authenticate a user and use the services on the TD Ameritrade API in [examples/webauth/webauth.go](./examples/webauth/webauth.go).
 Authentication is handled by the ```Authenticator``` struct and its methods ```StartOAuth2Flow``` and ```FinishOAuth2Flow```.
 You can get an authenticated ```tdameritrade.Client``` from an authenticated request with the ```AuthenticatedClient``` method, and use that to interact with the TD API.
-See [auth.go](https://github.com/JonCooperWorks/go-tdameritrade/blob/master/auth.go).
+See [auth.go](./auth.go).
 
 ```
 // Authenticator is a helper for TD Ameritrade's authentication.
@@ -30,7 +30,7 @@ type Authenticator struct {
 ```
 
 The library handles state generation and the OAuth2 flow.
-Users simply implement the ```PersistentStore``` interface (see [auth.go](https://github.com/JonCooperWorks/go-tdameritrade/blob/master/auth.go)) and tell it how to store and retrieve OAuth2 state and an ```oauth2.Token``` with the logged in user's credentials.
+Users simply implement the ```PersistentStore``` interface (see [auth.go](./auth.go)) and tell it how to store and retrieve OAuth2 state and an ```oauth2.Token``` with the logged in user's credentials.
 
 ```
 // PersistentStore is meant to persist data from TD Ameritrade that is needed between requests.
@@ -132,7 +132,7 @@ You can find an example [here](examples/streaming/streaming.go#L101).
 
 ## Examples
 
-More examples are in the [examples](https://github.com/JonCooperWorks/go-tdameritrade/tree/master/examples) directory.
+More examples are in the [examples](./examples) directory.
 
 #### Configuring the Authenticator from an environment variable
 
