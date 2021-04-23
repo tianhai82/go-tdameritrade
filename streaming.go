@@ -29,6 +29,52 @@ type StreamParams struct {
 	Fields string `json:"fields"`
 }
 
+// NewStreamAuthCommand creates a StreamAuthCommand from a TD Ameritrade UserPrincipal.
+// It validates the account ID against the accounts in the UserPrincipal to avoid creating invalid messages unneccesarily.
+func NewStreamAuthCommand(userPrincipal *UserPrincipal, accountID string) (*StreamAuthCommand, error) {
+	// findAccount ensures that a user has passed us an account they control to avoid wasting TD Ameritrade's time.
+	account, err := findAccount(userPrincipal, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	timestamp, err := time.Parse("2006-01-02T15:04:05-0700", userPrincipal.StreamerInfo.TokenTimestamp)
+	if err != nil {
+		return nil, err
+	}
+	credentials := url.Values{}
+	credentials.Add("userid", account.AccountID)
+	credentials.Add("token", userPrincipal.StreamerInfo.Token)
+	credentials.Add("company", account.Company)
+	credentials.Add("segment", account.Segment)
+	credentials.Add("cddomain", account.AccountCdDomainID)
+	credentials.Add("usergroup", userPrincipal.StreamerInfo.UserGroup)
+	credentials.Add("accesslevel", userPrincipal.StreamerInfo.AccessLevel)
+	credentials.Add("authorized", "Y")
+	credentials.Add("timestamp", fmt.Sprintf("%d", timestamp.UnixNano()/int64(time.Millisecond)))
+	credentials.Add("appid", userPrincipal.StreamerInfo.AppID)
+	credentials.Add("acl", userPrincipal.StreamerInfo.ACL)
+
+	// TD Ameritrade expects this JSON command from clients.
+	authCmd := StreamAuthCommand{
+		Requests: []StreamAuthRequest{
+			{
+				Service:   "ADMIN",
+				Command:   "LOGIN",
+				Requestid: 0,
+				Account:   account.AccountID,
+				Source:    userPrincipal.StreamerInfo.AppID,
+				Parameters: StreamAuthParams{
+					Credential: credentials.Encode(),
+					Token:      userPrincipal.StreamerInfo.Token,
+					Version:    "1.0",
+				},
+			},
+		},
+	}
+	return &authCmd, nil
+}
+
 type StreamAuthCommand struct {
 	Requests []StreamAuthRequest `json:"requests"`
 }
@@ -158,45 +204,9 @@ func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID str
 	}
 
 	// Authenticate with TD's websocket.
-	// findAccount ensures that a user has passed us an account they control to avoid wasting TD Ameritrade's time.
-	account, err := findAccount(userPrincipal, accountID)
+	authCmd, err := NewStreamAuthCommand(userPrincipal, accountID)
 	if err != nil {
 		return nil, err
-	}
-
-	timestamp, err := time.Parse("2006-01-02T15:04:05-0700", userPrincipal.StreamerInfo.TokenTimestamp)
-	if err != nil {
-		return nil, err
-	}
-	credentials := url.Values{}
-	credentials.Add("userid", account.AccountID)
-	credentials.Add("token", userPrincipal.StreamerInfo.Token)
-	credentials.Add("company", account.Company)
-	credentials.Add("segment", account.Segment)
-	credentials.Add("cddomain", account.AccountCdDomainID)
-	credentials.Add("usergroup", userPrincipal.StreamerInfo.UserGroup)
-	credentials.Add("accesslevel", userPrincipal.StreamerInfo.AccessLevel)
-	credentials.Add("authorized", "Y")
-	credentials.Add("timestamp", fmt.Sprintf("%d", timestamp.UnixNano()/int64(time.Millisecond)))
-	credentials.Add("appid", userPrincipal.StreamerInfo.AppID)
-	credentials.Add("acl", userPrincipal.StreamerInfo.ACL)
-
-	// TD Ameritrade expects this JSON command from clients.
-	authCmd := StreamAuthCommand{
-		Requests: []StreamAuthRequest{
-			{
-				Service:   "ADMIN",
-				Command:   "LOGIN",
-				Requestid: 0,
-				Account:   account.AccountID,
-				Source:    userPrincipal.StreamerInfo.AppID,
-				Parameters: StreamAuthParams{
-					Credential: credentials.Encode(),
-					Token:      userPrincipal.StreamerInfo.Token,
-					Version:    "1.0",
-				},
-			},
-		},
 	}
 
 	jsonCmd, err := json.Marshal(authCmd)
