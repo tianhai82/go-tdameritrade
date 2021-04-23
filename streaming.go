@@ -1,7 +1,6 @@
 package tdameritrade
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -111,7 +110,7 @@ func (s *StreamingClient) SendCommand(command Command) error {
 }
 
 // NewAuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
-func NewAuthenticatedStreamingClient(ctx context.Context, userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
+func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
 	streamURL := url.URL{
 		Scheme: "wss",
 		Host:   userPrincipal.StreamerInfo.StreamerSocketURL,
