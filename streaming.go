@@ -51,7 +51,7 @@ func NewStreamAuthCommand(userPrincipal *UserPrincipal, accountID string) (*Stre
 	credentials.Add("usergroup", userPrincipal.StreamerInfo.UserGroup)
 	credentials.Add("accesslevel", userPrincipal.StreamerInfo.AccessLevel)
 	credentials.Add("authorized", "Y")
-	credentials.Add("timestamp", fmt.Sprintf("%d", timestamp.UnixNano()/int64(time.Millisecond)))
+	credentials.Add("timestamp", fmt.Sprintf("%d", ConvertToEpoch(timestamp)))
 	credentials.Add("appid", userPrincipal.StreamerInfo.AppID)
 	credentials.Add("acl", userPrincipal.StreamerInfo.ACL)
 
