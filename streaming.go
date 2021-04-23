@@ -203,7 +203,6 @@ func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID str
 		return nil, err
 	}
 
-	// Authenticate with TD's websocket.
 	authCmd, err := NewStreamAuthCommand(userPrincipal, accountID)
 	if err != nil {
 		return nil, err
@@ -214,11 +213,13 @@ func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID str
 		return nil, err
 	}
 
+	// Authenticate with TD's websocket using the StreamAuthCommand
 	err = streamingClient.SendText(jsonCmd)
 	if err != nil {
 		return nil, err
 	}
 
+	// Wait on a response from TD Ameritrade.
 	select {
 	case message := <-streamingClient.messages:
 		var authResponse StreamAuthResponse
@@ -227,6 +228,7 @@ func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID str
 			return nil, err
 		}
 
+		// Response with a code 0 means authentication succeeded.
 		if authResponse.Response[0].Content.Code != 0 {
 			return nil, errors.New(authResponse.Response[0].Content.Msg)
 		}
