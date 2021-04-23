@@ -77,9 +77,11 @@ You get a ```tdameritrade.Client``` from the ```FinishOAuth2``` or ```Authentica
 ## Streaming
 TD Ameritrade provides a [websockets API](https://developer.tdameritrade.com/content/streaming-data) that allows for streaming data.
 `go-tdameritrade` provides a [streaming client](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#StreamingClient) for authenticating with TD Ameritrade's socket API.
-To create an instance of the `tdameritrade.StreamingClient`, use the [`tdameritrade.AuthenticatedStreamingClient`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#AuthenticatedStreamingClient) method.
+To create an instance of an authenticated `tdameritrade.StreamingClient`, use the [`tdameritrade.NewAuthenticatedStreamingClient`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#NewAuthenticatedStreamingClient) method.
 You'll need an authenticated [`tdameritrade.Client`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#Client) and the account ID you intend to listen on.
-You can get an account ID from the [User Principal](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#UserService.GetUserPrincipals) endpoint.
+To manually create an authenticated socket, use [`tdameritrade.NewUnauthenticatedStreamingClient`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#NewUnauthenticatedStreamingClient) to create a socket and send a JSON encoded authentication message.
+A convenience method, [`tdameritrade.NewStreamAuthCommand`](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#NewStreamAuthCommand), will create one of these given a [UserPrincipal](https://pkg.go.dev/github.com/joncooperworks/go-tdameritrade#UserService.GetUserPrincipals) and an account ID.
+
 
 TD's Streaming API accepts commands in a format described in their [documentation](https://developer.tdameritrade.com/content/streaming-data#_Toc504640563).
 `go-tdameritrade` provides struct wrappers over the command types.
