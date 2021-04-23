@@ -157,6 +157,10 @@ func (h *TDHandlers) Stream(w http.ResponseWriter, req *http.Request) {
 			},
 		},
 	})
+
+	w.Write([]byte("Check the terminal for streaming data"))
+	w.WriteHeader(http.StatusOK)
+
 }
 
 func main() {
