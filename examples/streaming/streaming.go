@@ -138,8 +138,6 @@ func (h *TDHandlers) Stream(w http.ResponseWriter, req *http.Request) {
 			case err := <-errors:
 				log.Printf("error: %v", err)
 				return
-			default:
-				continue
 			}
 		}
 	}()
