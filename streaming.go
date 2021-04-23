@@ -109,8 +109,11 @@ func (s *StreamingClient) SendCommand(command Command) error {
 	return s.SendText(commandBytes)
 }
 
-// NewAuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
-func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
+// NewUnauthenticatedStreamingClient returns an unauthenticated streaming client that has a connection to the TD Ameritrade websocket.
+// You can get an authenticated streaming client with NewAuthenticatedSteamingClient.
+// To authenticate manually, send a JSON serialized StreamAuthCommand message.
+// You'll need to Close a streaming client to free up the underlying resources.
+func NewUnauthenticatedStreamingClient(userPrincipal *UserPrincipal) (*StreamingClient, error) {
 	streamURL := url.URL{
 		Scheme: "wss",
 		Host:   userPrincipal.StreamerInfo.StreamerSocketURL,
@@ -140,6 +143,19 @@ func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID str
 			streamingClient.messages <- message
 		}
 	}()
+
+	return streamingClient, nil
+}
+
+// NewAuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
+// It sends an initial authentication message to TD Ameritrade before returning.
+// Use NewUnauthenticatedStreamingClient if you want to handle authentication yourself.
+// You'll need to Close a StreamingClient to free up the underlying resources.
+func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
+	streamingClient, err := NewUnauthenticatedStreamingClient(userPrincipal)
+	if err != nil {
+		return nil, err
+	}
 
 	// Authenticate with TD's websocket.
 	// findAccount ensures that a user has passed us an account they control to avoid wasting TD Ameritrade's time.
