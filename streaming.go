@@ -155,9 +155,19 @@ func (s *StreamingClient) SendCommand(command Command) error {
 	return s.SendText(commandBytes)
 }
 
+func (s *StreamingClient) Authenticate(authCmd *StreamAuthCommand) error {
+	jsonCmd, err := json.Marshal(authCmd)
+	if err != nil {
+		return err
+	}
+
+	// Authenticate with TD's websocket using the StreamAuthCommand
+	return s.SendText(jsonCmd)
+}
+
 // NewUnauthenticatedStreamingClient returns an unauthenticated streaming client that has a connection to the TD Ameritrade websocket.
-// You can get an authenticated streaming client with NewAuthenticatedSteamingClient.
-// To authenticate manually, send a JSON serialized StreamAuthCommand message.
+// You can get an authenticated streaming client with NewAuthenticatedStreamingClient.
+// To authenticate manually, send a JSON serialized StreamAuthCommand message with the StreamingClient's Authenticate method.
 // You'll need to Close a streaming client to free up the underlying resources.
 func NewUnauthenticatedStreamingClient(userPrincipal *UserPrincipal) (*StreamingClient, error) {
 	streamURL := url.URL{
@@ -208,13 +218,7 @@ func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID str
 		return nil, err
 	}
 
-	jsonCmd, err := json.Marshal(authCmd)
-	if err != nil {
-		return nil, err
-	}
-
-	// Authenticate with TD's websocket using the StreamAuthCommand
-	err = streamingClient.SendText(jsonCmd)
+	err = streamingClient.Authenticate(authCmd)
 	if err != nil {
 		return nil, err
 	}
