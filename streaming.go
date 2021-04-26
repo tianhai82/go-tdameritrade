@@ -204,7 +204,7 @@ func NewUnauthenticatedStreamingClient(userPrincipal *UserPrincipal) (*Streaming
 }
 
 // NewAuthenticatedStreamingClient returns a client that will pull live updates for a TD Ameritrade account.
-// It sends an initial authentication message to TD Ameritrade before returning.
+// It sends an initial authentication message to TD Ameritrade and waits for a response before returning.
 // Use NewUnauthenticatedStreamingClient if you want to handle authentication yourself.
 // You'll need to Close a StreamingClient to free up the underlying resources.
 func NewAuthenticatedStreamingClient(userPrincipal *UserPrincipal, accountID string) (*StreamingClient, error) {
