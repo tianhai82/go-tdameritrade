@@ -114,6 +114,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/tianhai82/oauth2 v0.0.0-20210430090559-0a55063d04ad h1:ukNdWmLCh85aTbzuIh4sb5M+a/YETqoqq6OT9JcLG7c=
 github.com/tianhai82/oauth2 v0.0.0-20210430090559-0a55063d04ad/go.mod h1:yMKflQXU0iqupZcFQiq8VNUXmGo5Nd6s/cUO0XCwyC0=
+github.com/tianhai82/oauth2 v0.0.0-20210430113849-0275d4e7bbf1 h1:G5P4dOLi+0OyV2rsJNx69DqUetIdaqa0BpPAqj8DFuc=
+github.com/tianhai82/oauth2 v0.0.0-20210430113849-0275d4e7bbf1/go.mod h1:yMKflQXU0iqupZcFQiq8VNUXmGo5Nd6s/cUO0XCwyC0=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
