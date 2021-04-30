@@ -4,10 +4,11 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"golang.org/x/oauth2"
+	"github.com/tianhai82/oauth2"
 )
 
 var (
@@ -22,10 +23,10 @@ var (
 // Implementations must return the same value they set for a user in StoreState in GetState, or the login process will fail.
 // It is meant to allow credentials to be stored in cookies, JWTs and anything else you can think of.
 type PersistentStore interface {
-	StoreToken(token *oauth2.Token, w http.ResponseWriter, req *http.Request) error
-	GetToken(req *http.Request) (*oauth2.Token, error)
-	StoreState(state string, w http.ResponseWriter, req *http.Request) error
-	GetState(*http.Request) (string, error)
+	StoreToken(token *oauth2.Token) error
+	GetToken() (*oauth2.Token, error)
+	StoreState(state string) error
+	GetState() (string, error)
 }
 
 // Authenticator is a helper for TD Ameritrade's authentication.
@@ -49,13 +50,22 @@ func NewAuthenticator(store PersistentStore, oauth2 oauth2.Config) *Authenticato
 
 // AuthenticatedClient tries to create an authenticated `Client` from a user's request
 func (a *Authenticator) AuthenticatedClient(ctx context.Context, req *http.Request) (*Client, error) {
-	token, err := a.Store.GetToken(req)
+	token, err := a.Store.GetToken()
 	if err != nil {
 		return nil, err
 	}
 
-	authenticatedClient := a.OAuth2.Client(ctx, token)
-	return NewClient(authenticatedClient)
+	// authenticatedClient := a.OAuth2.Client(ctx, token)
+	tokenSource := a.OAuth2.TokenSource(ctx, token)
+	client := oauth2.NewClient(ctx, tokenSource)
+	newToken, err := tokenSource.Token()
+	if err != nil {
+		return nil, err
+	}
+	if newToken.AccessToken != token.AccessToken || newToken.RefreshToken != token.RefreshToken {
+		a.Store.StoreToken(newToken)
+	}
+	return NewClient(client)
 }
 
 // StartOAuth2Flow returns TD Ameritrade's Auth URL and stores a random state value.
@@ -70,7 +80,7 @@ func (a *Authenticator) StartOAuth2Flow(w http.ResponseWriter, req *http.Request
 
 	// Instead, have callers store the state we give them and present it to us when we ask for it again.
 	state := base64.RawURLEncoding.EncodeToString(b)
-	err := a.Store.StoreState(state, w, req)
+	err := a.Store.StoreState(state)
 	if err != nil {
 		return "", err
 	}
@@ -90,7 +100,7 @@ func (a *Authenticator) FinishOAuth2Flow(ctx context.Context, w http.ResponseWri
 		return nil, ErrNoState
 	}
 
-	expectedState, err := a.Store.GetState(req)
+	expectedState, err := a.Store.GetState()
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +120,10 @@ func (a *Authenticator) FinishOAuth2Flow(ctx context.Context, w http.ResponseWri
 		return nil, err
 	}
 
-	err = a.Store.StoreToken(token, w, req)
+	b, _ := json.Marshal(token)
+	fmt.Println(string(b))
+
+	err = a.Store.StoreToken(token)
 	if err != nil {
 		return nil, err
 	}

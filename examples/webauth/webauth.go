@@ -3,84 +3,44 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 
-	"github.com/joncooperworks/go-tdameritrade"
-	"golang.org/x/oauth2"
+	"github.com/tianhai82/go-tdameritrade"
+	"github.com/tianhai82/oauth2"
 )
 
 type HTTPHeaderStore struct{}
 
-func (s *HTTPHeaderStore) StoreToken(token *oauth2.Token, w http.ResponseWriter, req *http.Request) error {
-	// DO NOT DO THIS IN A PRODUCTION ENVIRONMENT!
-	// This is just an example.
-	// Used signed cookies like those provided by https://github.com/gorilla/securecookie
-	http.SetCookie(
-		w,
-		&http.Cookie{
-			Name:    "refreshToken",
-			Value:   token.RefreshToken,
-			Expires: token.Expiry,
-		},
-	)
-	http.SetCookie(
-		w,
-		&http.Cookie{
-			Name:    "accessToken",
-			Value:   token.AccessToken,
-			Expires: token.Expiry,
-		},
-	)
+var cachedToken *oauth2.Token
+var cachedState string
+
+var CLIENT_KEY = "SYBVLAWXJJ1PF0V1UEKKD8WG9OIKBLSN"
+
+func (s *HTTPHeaderStore) StoreToken(token *oauth2.Token) error {
+	cachedToken = token
 	return nil
 }
 
-func (s HTTPHeaderStore) GetToken(req *http.Request) (*oauth2.Token, error) {
-	// DO NOT DO THIS IN A PRODUCTION ENVIRONMENT!
-	// This is just an example.
-	// Used signed cookies like those provided by https://github.com/gorilla/securecookie
-	refreshToken, err := req.Cookie("refreshToken")
-	if err != nil {
-		return nil, err
+func (s HTTPHeaderStore) GetToken() (*oauth2.Token, error) {
+	if cachedToken == nil {
+		return nil, fmt.Errorf("no token")
 	}
-
-	accessToken, err := req.Cookie("accessToken")
-	if err != nil {
-		return nil, err
-	}
-
-	return &oauth2.Token{
-		AccessToken:  accessToken.Value,
-		RefreshToken: refreshToken.Value,
-		Expiry:       refreshToken.Expires,
-	}, nil
+	return cachedToken, nil
 }
 
-func (s HTTPHeaderStore) StoreState(state string, w http.ResponseWriter, req *http.Request) error {
-	// DO NOT DO THIS IN A PRODUCTION ENVIRONMENT!
-	// This is just an example.
-	// Used signed cookies like those provided by https://github.com/gorilla/securecookie
-	http.SetCookie(
-		w,
-		&http.Cookie{
-			Name:  "state",
-			Value: state,
-		},
-	)
+func (s HTTPHeaderStore) StoreState(state string) error {
+	cachedState = state
 	return nil
 }
 
-func (s HTTPHeaderStore) GetState(req *http.Request) (string, error) {
-	// DO NOT DO THIS IN A PRODUCTION ENVIRONMENT!
-	// This is just an example.
-	// Used signed cookies like those provided by https://github.com/gorilla/securecookie
-	cookie, err := req.Cookie("state")
-	if err != nil {
-		return "", err
+func (s HTTPHeaderStore) GetState() (string, error) {
+	if cachedState == "" {
+		return "", fmt.Errorf("state not found")
 	}
 
-	return cookie.Value, nil
+	return cachedState, nil
 }
 
 type TDHandlers struct {
@@ -146,10 +106,7 @@ func (h *TDHandlers) Quote(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	clientID := os.Getenv("TDAMERITRADE_CLIENT_ID")
-	if clientID == "" {
-		log.Fatal("Unauthorized: No client ID present")
-	}
+	clientID := CLIENT_KEY
 
 	authenticator := tdameritrade.NewAuthenticator(
 		&HTTPHeaderStore{},
@@ -159,7 +116,7 @@ func main() {
 				TokenURL: "https://api.tdameritrade.com/v1/oauth2/token",
 				AuthURL:  "https://auth.tdameritrade.com/auth",
 			},
-			RedirectURL: "https://localhost:8080/callback",
+			RedirectURL: "http://localhost:8080/callback",
 		},
 	)
 	handlers := &TDHandlers{authenticator: authenticator}

@@ -47,7 +47,7 @@ type Response struct {
 // NewClient returns a new TD-Ameritrade API client. If a nil httpClient is
 // provided, a new http.Client will be used. To use API methods which require
 // authentication, provide an http.Client that will perform the authentication
-// for you (such as that provided by the golang.org/x/oauth2 library).
+// for you (such as that provided by the github.com/tianhai82/oauth2 library).
 func NewClient(httpClient *http.Client) (*Client, error) {
 	if httpClient == nil {
 		httpClient = &http.Client{}

@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/oauth2"
+	"github.com/tianhai82/oauth2"
 )
 
 type testStore struct{}
 
-func (s *testStore) StoreToken(token *oauth2.Token, w http.ResponseWriter, req *http.Request) error {
+func (s *testStore) StoreToken(token *oauth2.Token) error {
 	return nil
 }
 
-func (s *testStore) GetToken(req *http.Request) (*oauth2.Token, error) {
+func (s *testStore) GetToken() (*oauth2.Token, error) {
 	return &oauth2.Token{
 		AccessToken:  "ACCESSTOKEN",
 		RefreshToken: "REFRESHTOKEN",
@@ -25,21 +25,21 @@ func (s *testStore) GetToken(req *http.Request) (*oauth2.Token, error) {
 	}, nil
 }
 
-func (s *testStore) StoreState(state string, w http.ResponseWriter, req *http.Request) error {
+func (s *testStore) StoreState(state string) error {
 	return nil
 }
 
-func (s *testStore) GetState(req *http.Request) (string, error) {
+func (s *testStore) GetState() (string, error) {
 	return "state", nil
 }
 
 type testEmptyStore struct{}
 
-func (s *testEmptyStore) StoreToken(token *oauth2.Token, w http.ResponseWriter, req *http.Request) error {
+func (s *testEmptyStore) StoreToken(token *oauth2.Token) error {
 	return nil
 }
 
-func (s *testEmptyStore) GetToken(req *http.Request) (*oauth2.Token, error) {
+func (s *testEmptyStore) GetToken() (*oauth2.Token, error) {
 	return &oauth2.Token{
 		AccessToken:  "ACCESSTOKEN",
 		RefreshToken: "REFRESHTOKEN",
@@ -47,11 +47,11 @@ func (s *testEmptyStore) GetToken(req *http.Request) (*oauth2.Token, error) {
 	}, nil
 }
 
-func (s *testEmptyStore) StoreState(state string, w http.ResponseWriter, req *http.Request) error {
+func (s *testEmptyStore) StoreState(state string) error {
 	return nil
 }
 
-func (s *testEmptyStore) GetState(req *http.Request) (string, error) {
+func (s *testEmptyStore) GetState() (string, error) {
 	return "", nil
 }
 
