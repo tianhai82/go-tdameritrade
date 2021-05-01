@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -119,9 +118,6 @@ func (a *Authenticator) FinishOAuth2Flow(ctx context.Context, w http.ResponseWri
 	if err != nil {
 		return nil, err
 	}
-
-	b, _ := json.Marshal(token)
-	fmt.Println(string(b))
 
 	err = a.Store.StoreToken(token)
 	if err != nil {

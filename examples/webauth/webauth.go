@@ -106,6 +106,10 @@ func (h *TDHandlers) Quote(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	clientID := os.Getenv("CLIENT_ID")
+	if clientID == "" {
+		fmt.Println("CLIENT_ID not found in environment")
+		return
+	}
 
 	authenticator := tdameritrade.NewAuthenticator(
 		&HTTPHeaderStore{},
@@ -122,5 +126,5 @@ func main() {
 	http.HandleFunc("/authenticate", handlers.Authenticate)
 	http.HandleFunc("/callback", handlers.Callback)
 	http.HandleFunc("/quote", handlers.Quote)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServeTLS(":8080", "./localhost8080.cert", "./localhost8080.key", nil))
 }
