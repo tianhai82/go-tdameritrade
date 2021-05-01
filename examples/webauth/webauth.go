@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/tianhai82/go-tdameritrade"
 	"github.com/tianhai82/oauth2"
@@ -15,8 +16,6 @@ type HTTPHeaderStore struct{}
 
 var cachedToken *oauth2.Token
 var cachedState string
-
-var CLIENT_KEY = "SYBVLAWXJJ1PF0V1UEKKD8WG9OIKBLSN"
 
 func (s *HTTPHeaderStore) StoreToken(token *oauth2.Token) error {
 	cachedToken = token
@@ -106,7 +105,7 @@ func (h *TDHandlers) Quote(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	clientID := CLIENT_KEY
+	clientID := os.Getenv("CLIENT_ID")
 
 	authenticator := tdameritrade.NewAuthenticator(
 		&HTTPHeaderStore{},
